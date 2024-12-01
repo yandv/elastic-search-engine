@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+
+source-document/
+suspicious-document/
+
+whoosh_index/
