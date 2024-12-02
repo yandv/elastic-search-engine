@@ -7,6 +7,7 @@ from collections import Counter
 import matplotlib
 from matplotlib import pyplot as plt
 
+from nltk.probability import FreqDist
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
@@ -79,7 +80,7 @@ def analyze_word_distribution(json_file):
     removed_stop_words = []
     
     with open(json_file, 'r', encoding='utf-8') as f:
-        documents = [doc for doc in json.load(f) if doc.get('type') == 'source-document']
+        documents = [doc for doc in json.load(f) if doc.get('type') == 'source-document'][:500]
     
     for doc in documents:
         result = process_document(doc)
@@ -91,13 +92,10 @@ def analyze_word_distribution(json_file):
         del result
         del doc
                 
-    word_freq = Counter(all_tokens)
-    stop_word_freq = Counter(removed_stop_words)
+    word_freq = FreqDist(all_tokens)
+    stop_word_freq = FreqDist(removed_stop_words)
     
-    sorted_freq = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)
-    sorted_stop_freq = sorted(stop_word_freq.items(), key=lambda x: x[1], reverse=True)
-    
-    return all_tokens, len(word_freq), sorted_freq, len(stop_word_freq), sorted_stop_freq
+    return all_tokens, len(word_freq), word_freq, len(stop_word_freq), stop_word_freq
 
 def plot_word_distribution(sorted_freq, max_words=50):
     """
@@ -107,52 +105,61 @@ def plot_word_distribution(sorted_freq, max_words=50):
         sorted_freq (list): List of (word, frequency) tuples sorted by frequency
     """
     
-    words, frequencies = zip(*sorted_freq[:max_words])
+    p = sorted_freq.plot(max_words,show=False,title=f'Distribuição das {max_words} palavras mais frequentes no corpus')
+    p.set_xlabel("Amostra")
+    p.set_ylabel("Frequência")
+    plt.show()
     
-    plt.figure(figsize=(10, 6))
-    plt.bar(words, frequencies, color="skyblue")
+def plot_word_distribution_loglog(sorted_freq, max_words=10000):
+    """
+    Create a log-log plot of word distribution
     
-    plt.title("Distribuição de Frequência das Palavras", fontsize=16)
-    plt.xlabel("Palavras", fontsize=14)
-    plt.ylabel("Frequência", fontsize=14)
-    plt.xticks(rotation=45, fontsize=12)  # Rotaciona as palavras no eixo X para melhor legibilidade
-    plt.grid(axis='y', linestyle='--', alpha=0.7)  # Adiciona linhas de grade horizontais
-
-    # Mostrar o gráfico
-    plt.tight_layout()
+    Args:
+        sorted_freq (list): List of (word, frequency) tuples sorted by frequency
+    """
+    
+    p = sorted_freq.plot(max_words, show=False, title=f'Distribuição das {max_words} palavras mais frequentes no corpus (log-log)')
+    p.set_xscale('log')
+    p.set_yscale('log')
+    p.set_xlabel("Amostra")
+    p.set_ylabel("Frequência")
     plt.show()
 
 def main(json_file='/../resources/papers.json'):
     # Analyze word distribution
     all_tokens, vocab_size, sorted_freq, stop_word_vocab_size, sorted_stop_freq = analyze_word_distribution(os.path.dirname(__file__) + json_file)
     
+    
     # Print basic statistics
     print(f"Total number of words: {len(all_tokens)}")
     print(f"Vocabulary size: {vocab_size}")
     print(f"Total number of stopwords: {stop_word_vocab_size}")
     
-    # Print top 10 most frequent words
-    print("\nTop 10 most frequent words:")
-    for word, freq in sorted_freq[:10]:
+    print("\nTop 30 most frequent words:")
+    for word, freq in sorted_freq.most_common(30):
         print(f"{word}: {freq}")
         
-    print("\nTop 10 most frequent stopwords:")
-    for word, freq in sorted_stop_freq[:10]:
-        print(f"{word}: {freq}")
-        
-    # Print bottom 10 least frequent words
-    print("\nBottom 10 least frequent words:")
-    for word, freq in sorted_freq[-10:]:
+    print("\nTop 30 most frequent stopwords:")
+    for word, freq in sorted_stop_freq.most_common(30):
         print(f"{word}: {freq}")
     
+    sorted_desc_freq = sorted(sorted_freq.items(), key=lambda x: x[1], reverse=True)
+    sorted_desc_stop_freq = sorted(sorted_stop_freq.items(), key=lambda x: x[1], reverse=True)
     
-    print("\nBottom 10 least frequent stopwords:")
-    for word, freq in sorted_stop_freq[-10:]:
+    print("\nBottom 30 least frequent words:")
+    for word, freq in sorted_desc_freq[-30:]:
+        print(f"{word}: {freq}")
+    
+    print("\nBottom 30 least frequent stopwords:")
+    for word, freq in sorted_desc_stop_freq[-30:]:
         print(f"{word}: {freq}")
     
     # Plot word distribution
     plot_word_distribution(sorted_freq)
     plot_word_distribution(sorted_stop_freq)
+    
+    plot_word_distribution_loglog(sorted_freq)
+    plot_word_distribution_loglog(sorted_stop_freq)
 
 if __name__ == "__main__":
     main()
