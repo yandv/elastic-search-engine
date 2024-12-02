@@ -1,8 +1,7 @@
 import json
 import nltk
 import os
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from collections import Counter
+from functools import reduce
 
 import matplotlib
 from matplotlib import pyplot as plt
@@ -42,29 +41,9 @@ def preprocess_text(text):
     
     return all_tokens, removed_stop_words
 
-def process_document(doc):
-    try:
-        filepath = os.path.join(
-            os.path.dirname(__file__), 
-            '..', 
-            'resources', 
-            doc.get('type'), 
-            doc.get('filename')
-        )
-        
-        print(f"Processing {filepath}")
-        
-        with open(filepath) as f:
-            content = f.read()
-        tokens, removed_stop_words = preprocess_text(content)
-        return {
-            'filename': doc.get('filename'),
-            'tokens': tokens,
-            'removed_stop_words': removed_stop_words
-        }
-    except Exception as e:
-        print(f"Erro ao processar documento: {doc.get('filename')} {e}")
-        raise e
+def load_documents(json_file):
+    with open(json_file, 'r', encoding='utf-8') as f:
+        return [doc for doc in json.load(f) if doc.get('type') == 'source-document']
 
 def analyze_word_distribution(json_file):
     """
@@ -76,28 +55,45 @@ def analyze_word_distribution(json_file):
     Returns:
         tuple: (total_words, vocabulary_size, word_frequencies)
     """
-    all_tokens = []
-    removed_stop_words = []
     
-    with open(json_file, 'r', encoding='utf-8') as f:
-        documents = [doc for doc in json.load(f) if doc.get('type') == 'source-document'][:500]
+    tokens = FreqDist()
+    stop_words = FreqDist()
     
-    for doc in documents:
-        result = process_document(doc)
+    for idx, doc in enumerate(load_documents(json_file)):
+        file_name = doc.get('filename')
+            
+        print(f"Processing {file_name}")
         
-        all_tokens.extend(result.get('tokens'))
-        removed_stop_words.extend(result.get('removed_stop_words'))
-        print(f"Processed {result.get('filename')}")
+        filepath = os.path.join(
+            os.path.dirname(__file__), 
+            '..', 
+            'resources', 
+            doc.get('type'), 
+            file_name
+        )
         
-        del result
-        del doc
+        
+        with open(filepath) as f:
+            content = f.read()
                 
-    word_freq = FreqDist(all_tokens)
-    stop_word_freq = FreqDist(removed_stop_words)
+        text_tokens, removed_stop_words = preprocess_text(content)
+        
+        for token in text_tokens:
+            tokens[token] += 1
+        
+        for stop_word in removed_stop_words:
+            stop_words[stop_word] += 1
+        
+        del content
+        del text_tokens
+        del removed_stop_words
+        
+        print(f"Finished processing {file_name} ({(idx + 1)/len(load_documents(json_file)):.2%})")
+                
     
-    return all_tokens, len(word_freq), word_freq, len(stop_word_freq), stop_word_freq
+    return tokens, stop_words
 
-def plot_word_distribution(sorted_freq, max_words=50):
+def plot_word_distribution(sorted_freq, max_words=100):
     """
     Create a log-log plot of word distribution
     
@@ -126,25 +122,26 @@ def plot_word_distribution_loglog(sorted_freq, max_words=10000):
     plt.show()
 
 def main(json_file='/../resources/papers.json'):
+    
     # Analyze word distribution
-    all_tokens, vocab_size, sorted_freq, stop_word_vocab_size, sorted_stop_freq = analyze_word_distribution(os.path.dirname(__file__) + json_file)
+    words_freq, stop_word_freq = analyze_word_distribution(os.path.dirname(__file__) + json_file)
     
     
     # Print basic statistics
-    print(f"Total number of words: {len(all_tokens)}")
-    print(f"Vocabulary size: {vocab_size}")
-    print(f"Total number of stopwords: {stop_word_vocab_size}")
+    print(f"Total number of words: {reduce(lambda x, y: x + y, words_freq.values()) + reduce(lambda x, y: x + y, stop_word_freq.values())}")
+    print(f"Vocabulary size: {len(words_freq.items()) + len(stop_word_freq.items())}")
+    print(f"Total number of stopwords: {len(stop_word_freq.items())}")
     
     print("\nTop 30 most frequent words:")
-    for word, freq in sorted_freq.most_common(30):
+    for word, freq in words_freq.most_common(30):
         print(f"{word}: {freq}")
         
     print("\nTop 30 most frequent stopwords:")
-    for word, freq in sorted_stop_freq.most_common(30):
+    for word, freq in stop_word_freq.most_common(30):
         print(f"{word}: {freq}")
     
-    sorted_desc_freq = sorted(sorted_freq.items(), key=lambda x: x[1], reverse=True)
-    sorted_desc_stop_freq = sorted(sorted_stop_freq.items(), key=lambda x: x[1], reverse=True)
+    sorted_desc_freq = sorted(words_freq.items(), key=lambda x: x[1], reverse=True)
+    sorted_desc_stop_freq = sorted(stop_word_freq.items(), key=lambda x: x[1], reverse=True)
     
     print("\nBottom 30 least frequent words:")
     for word, freq in sorted_desc_freq[-30:]:
@@ -155,11 +152,11 @@ def main(json_file='/../resources/papers.json'):
         print(f"{word}: {freq}")
     
     # Plot word distribution
-    plot_word_distribution(sorted_freq)
-    plot_word_distribution(sorted_stop_freq)
+    plot_word_distribution(words_freq)
+    plot_word_distribution(stop_word_freq)
     
-    plot_word_distribution_loglog(sorted_freq)
-    plot_word_distribution_loglog(sorted_stop_freq)
+    plot_word_distribution_loglog(words_freq)
+    plot_word_distribution_loglog(stop_word_freq)
 
 if __name__ == "__main__":
     main()
