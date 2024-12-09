@@ -7,11 +7,13 @@ from whoosh.index import open_dir
 from whoosh.scoring import BM25F 
 from whoosh.qparser import MultifieldParser
 
+from analyzer import whoosh_index_address
+
 
 import os
 import time
 
-if not os.path.exists("/media/allanmxr/01DB1BE20861AF20/Users/Allan/woosh/motor-1/"):
+if not os.path.exists(whoosh_index_address):
     print("Índice não encontrado, execute o indexador.py primeiro")
     exit(1)
     
@@ -19,7 +21,7 @@ stop_words = set(stopwords.words("english"))
 
 print("Abrindo índice...")
 
-ix = open_dir("/media/allanmxr/01DB1BE20861AF20/Users/Allan/woosh/motor-1/")
+ix = open_dir(whoosh_index_address)
 
 # get oq deve ser buscado do input
 

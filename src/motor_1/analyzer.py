@@ -43,6 +43,7 @@ whoosh_schema = Schema(
     content=TEXT(analyzer=analyzer, stored=True)
 )
 
+whoosh_index_address = "whoosh-index"
 
 
 if __name__ == '__main__':

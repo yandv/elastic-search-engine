@@ -1,16 +1,16 @@
 from whoosh import index
-from analyzer import whoosh_schema as schema
+from analyzer import whoosh_schema as schema, whoosh_index_address
 
 from file_helper import get_source_documents
 
 import os
 import time
 
-# Criando o índiceasdasd
-if not os.path.exists("/media/allanmxr/01DB1BE20861AF20/Users/Allan/woosh/motor-1.1"):
-    os.mkdir("/media/allanmxr/01DB1BE20861AF20/Users/Allan/woosh/motor-1.1")
+# Criando o índice
+if not os.path.exists(whoosh_index_address):
+    os.mkdir(whoosh_index_address)
 
-ix = index.create_in("/media/allanmxr/01DB1BE20861AF20/Users/Allan/woosh/motor-1.1", schema)
+ix = index.create_in(whoosh_index_address, schema)
 
 #extract id, title and content
 documents_to_index = [{"id": doc['id'], "title": doc['title'], "content": doc['content']} for doc in get_source_documents()]
