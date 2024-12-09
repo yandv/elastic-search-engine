@@ -9,8 +9,12 @@ def preprocess_with_whoosh_analyzer(text):
 # Exemplo de uso
 documents_to_index = get_documents_to_index()
 
+print("Conectando ao servidor Elasticsearch...")
+
 # Conectando ao Elasticsearch
 es = Elasticsearch(["http://localhost:9200"])
+
+print("Conexão estabelecida, indexando documentos...")
 
 start_time = time.perf_counter()
 
@@ -25,6 +29,8 @@ actions = [
     }
     for doc in documents_to_index
 ]
+
+print("Fazendo a indexação....")
 
 response = helpers.bulk(es, actions)
 
