@@ -1,10 +1,7 @@
 import json
 import nltk
 import os
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from collections import Counter
 
-import matplotlib
 from matplotlib import pyplot as plt
 
 from nltk.probability import FreqDist

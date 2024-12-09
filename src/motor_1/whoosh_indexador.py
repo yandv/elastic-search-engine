@@ -6,7 +6,7 @@ from file_helper import get_source_documents
 import os
 import time
 
-# Criando o índice
+# Criando o índiceasdasd
 if not os.path.exists("/media/allanmxr/01DB1BE20861AF20/Users/Allan/woosh/motor-1.1"):
     os.mkdir("/media/allanmxr/01DB1BE20861AF20/Users/Allan/woosh/motor-1.1")
 

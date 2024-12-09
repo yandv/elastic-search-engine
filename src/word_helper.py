@@ -1,6 +1,11 @@
 from nltk.corpus import wordnet, stopwords
 import nltk
 
+import os
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 nltk.download("wordnet")
 nltk.download("omw-1.4")
 

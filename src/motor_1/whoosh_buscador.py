@@ -4,7 +4,6 @@ from nltk.corpus import stopwords
 
 from whoosh.index import open_dir
 
-from whoosh.query import Or, And, Term
 from whoosh.scoring import BM25F 
 from whoosh.qparser import MultifieldParser
 
