@@ -45,6 +45,8 @@ whoosh_schema = Schema(
 
 whoosh_index_address = "whoosh-index"
 
+def get_documents_to_index():
+    return [{"id": doc['id'], "title": doc['title'], "content": doc['content']} for doc in get_source_documents()]
 
 if __name__ == '__main__':
     documents_to_index = [{"id": doc['id'], "title": doc['title'], "content": doc['content']} for doc in get_source_documents()]

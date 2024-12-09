@@ -1,7 +1,5 @@
 from whoosh import index
-from analyzer import whoosh_schema as schema, whoosh_index_address
-
-from file_helper import get_source_documents
+from analyzer import whoosh_schema as schema, whoosh_index_address, get_documents_to_index
 
 import os
 import time
@@ -13,7 +11,7 @@ if not os.path.exists(whoosh_index_address):
 ix = index.create_in(whoosh_index_address, schema)
 
 #extract id, title and content
-documents_to_index = [{"id": doc['id'], "title": doc['title'], "content": doc['content']} for doc in get_source_documents()]
+documents_to_index = get_documents_to_index()
 
 start_time = time.time()
 times = []
