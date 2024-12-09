@@ -20,11 +20,20 @@ class NLTKSynonymFilter(Filter):
                 new_token.text = synonym
                 yield new_token  # Retorna cada sinônimo como novo token
 
+class RemoveDuplicateFilter(Filter):
+    def __call__(self, tokens):
+        seen = set()
+        for token in tokens:
+            if token.text not in seen:
+                seen.add(token.text)
+                yield token
+
 analyzer = (
     RegexTokenizer() 
     | LowercaseFilter() 
     | StopFilter(stoplist=stopwords.words("english")) 
     | NLTKSynonymFilter()
+    | RemoveDuplicateFilter()
 )
 
 whoosh_schema = Schema(

@@ -2,7 +2,7 @@ from nltk.util import bigrams
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 
-from whoosh import index
+from whoosh.index import open_dir
 
 from whoosh.query import Or, And, Term
 from whoosh.scoring import BM25F 
@@ -20,7 +20,7 @@ stop_words = set(stopwords.words("english"))
 
 print("Abrindo índice...")
 
-ix = index.open_dir("/media/allanmxr/01DB1BE20861AF20/Users/Allan/woosh/motor-1/")
+ix = open_dir("/media/allanmxr/01DB1BE20861AF20/Users/Allan/woosh/motor-1/")
 
 # get oq deve ser buscado do input
 
