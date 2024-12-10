@@ -21,6 +21,43 @@ class NLTKSynonymFilter(Filter):
                 new_token.text = synonym
                 yield new_token  # Retorna cada sinônimo como novo token
 
+import nltk
+from nltk import ne_chunk, pos_tag, word_tokenize, tree
+
+class NLTKNamedEntityFilter(Filter):
+    def __call__(self, tokens):
+        token_list = list(tokens)
+        original_text = " ".join(t.text for t in token_list)
+        
+        nltk_tokens = word_tokenize(original_text)
+        pos_tags = pos_tag(nltk_tokens)
+        chunks = ne_chunk(pos_tags, binary=False)  
+        
+        ent_map = [None] * len(token_list)
+        
+        w_idx = 0
+        
+        def traverse_tree(chunks):
+            nonlocal w_idx
+            for chunk in chunks:
+                if isinstance(chunk, tree.Tree):
+                    ent_label = chunk.label()
+                    for leaf in chunk.leaves():
+                        if w_idx < len(ent_map):
+                            ent_map[w_idx] = ent_label
+                            w_idx += 1
+                else:
+                    if w_idx < len(ent_map):
+                        w_idx += 1
+        
+        traverse_tree(chunks)
+        
+        for i, tok in enumerate(token_list):
+            if ent_map[i] is not None:
+                tok.ent_type = ent_map[i]
+            yield tok
+
+
 analyzer = (
     RegexTokenizer() 
     | LowercaseFilter() 
@@ -28,10 +65,18 @@ analyzer = (
     | NLTKSynonymFilter()
 )
 
+analyzer_named_entity = (
+    RegexTokenizer() 
+    | LowercaseFilter() 
+    | StopFilter(stoplist=stopwords.words("english")) 
+    | NLTKNamedEntityFilter()
+)
+
 whoosh_schema = Schema(
     id=ID(unique=True, stored=True),
     title=TEXT(analyzer=analyzer, stored=True, field_boost=1.1),
-    content=TEXT(analyzer=analyzer, stored=True)
+    content=TEXT(analyzer=analyzer, stored=True),
+    entity=TEXT(analyzer=analyzer_named_entity, stored=True, field_boost=1.5)
 )
 
 whoosh_index_address = "whoosh-index"

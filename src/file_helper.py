@@ -39,6 +39,18 @@ with open(f'{current_dir}/../resources/papers.json', 'r') as f:
 
 print(f"Documentos carregados com sucesso ({time.time() - start_time:.4f}s)")
 
+def precision_at_k(k, relevant_documents, retrieved_documents):
+    relevant_documents = set(relevant_documents)
+    retrieved_documents = set(retrieved_documents[:k])
+    
+    return len(relevant_documents.intersection(retrieved_documents)) / k
+
+def recall_at_k(k, relevant_documents, retrieved_documents):
+    relevant_documents = set(relevant_documents)
+    retrieved_documents = set(retrieved_documents[:k])
+    
+    return len(relevant_documents.intersection(retrieved_documents)) / len(relevant_documents)
+
 def get_documents():
     return documents
 

@@ -43,7 +43,7 @@ k = [2,4,6,8,10]
 
 with ix.searcher(weighting=BM25F) as searcher:
     start_time = time.perf_counter()
-    multifield_parser = MultifieldParser(["title", "content"], ix.schema, group=OrGroup)
+    multifield_parser = MultifieldParser(["title", "content", "entity"], ix.schema, group=OrGroup)
     
     times = []
     
